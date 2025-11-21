@@ -8,7 +8,8 @@ class Task(models.Model):
     ]
 
     title = models.CharField(max_length=200)
-    description = models.TextField(blank=True)
+    description = models.CharField(max_length=200)
+    full_description = models.TextField(blank=True, null=True)
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='TODO')
     created_at = models.DateTimeField(auto_now_add=True)
 

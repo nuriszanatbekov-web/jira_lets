@@ -4,7 +4,7 @@ from .models import Task
 class TaskForm(forms.ModelForm):
     class Meta:
         model = Task
-        fields = ['title', 'description', 'status']
+        fields = ['title', 'description', 'full_description', 'status']
         widgets = {
             'status': forms.Select(attrs={'class': 'form-select'})
         }

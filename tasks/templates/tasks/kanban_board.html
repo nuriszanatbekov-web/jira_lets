@@ -5,6 +5,7 @@
     <title>Django Kanban Тактасы</title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css">
     <style>
+        /* --- СИЗДИН БИРИНЧИ CSS БЛОГУҢУЗ --- */
         body { background-color: #f4f5f7; font-family: "Segoe UI", Roboto, sans-serif; }
         .navbar { background: #0747A6; padding: 10px 20px; display: flex; justify-content: space-between; align-items: center;}
         .navbar-brand { color: #fff !important; font-weight: bold; font-size: 22px; }
@@ -83,7 +84,7 @@
         .hide { display: none; }
     </style>
     <style>
-    /* --- НЕГИЗГИ ӨЗГӨРТҮҮ: ФОНДУ КАРА КӨККӨ АЛМАШТЫРУУ --- */
+    /* --- СИЗДИН ЭКИНЧИ (КАРАҢГЫ) CSS БЛОГУҢУЗ --- */
     body {
         background-color: #172B4D; /* Караңгы көк фон */
         font-family: "Segoe UI", Roboto, sans-serif;
@@ -188,7 +189,14 @@
 
     .drag-over { background-color: #283e60; } /* Drag-over фонун да караңгылатуу */
     .hide { display: none; }
-</style>
+
+    /* --- ОҢДООЛОР: МОДАЛДАГЫ ТЕКСТТИ ОҢДОО --- */
+    .modal-body p {
+        word-break: break-word; /* Узун сөздөрдү сындыруу */
+        overflow-wrap: break-word; /* Узун сөздөрдү жылдыруу */
+    }
+    /* --- ОҢДОО АЯКТАДЫ --- */
+    </style>
 </head>
 <body>
 <nav class="navbar px-4">
@@ -198,6 +206,29 @@
     </button>
 </nav>
 
+<div class="modal fade" id="taskDetailsModal" tabindex="-1" aria-labelledby="taskDetailsModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content" style="background-color: #21304A; color: #f4f5f7;">
+            <div class="modal-header" style="border-bottom: 1px solid #384C6C;">
+                <h5 class="modal-title" id="taskDetailsModalLabel">Тапшырма: <span id="modal-title"></span></h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close" style="filter: invert(1);"></button>
+            </div>
+            <div class="modal-body">
+                <p><strong>ID:</strong> <span id="modal-id"></span></p>
+                <p><strong>Статус:</strong> <span id="modal-status"></span></p>
+                <hr style="border-top: 1px solid #384C6C;">
+                <h5>Кыскача Сүрөттөмө (Картада көрүнгөн):</h5>
+                <p id="modal-short-description" style="white-space: pre-wrap;"></p>
+                <hr style="border-top: 1px solid #384C6C;">
+                <h5>Подробнее (Толук Сүрөттөмө):</h5>
+                <p id="modal-full-description" style="white-space: pre-wrap;">Маалымат жок</p>
+            </div>
+            <div class="modal-footer" style="border-top: 1px solid #384C6C;">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" style="background: #384C6C; border: none;">Жабуу</button>
+            </div>
+        </div>
+    </div>
+</div>
 <div class="container mt-4">
     <div id="new-task-form-container" class="form-box hide">
         <h3 class="mb-3">➕ Жаңы Тапшырма Кошуу</h3>
@@ -212,10 +243,15 @@
         <div class="kanban-column" data-status="TODO">
             <h2>🟦 Todo ({{ todo_tasks|length }})</h2>
             {% for task in todo_tasks %}
-            <div class="task-card todo" data-id="{{ task.id }}">
+            <div class="task-card todo"
+                data-id="{{ task.id }}"
+                data-title="{{ task.title }}"
+                data-short-description="{{ task.description|truncatechars:120 }}"
+                data-full-description="{{ task.full_description|default:'' }}"
+                data-status="TODO">
                 <strong>{{ task.title }}</strong>
                 <p>{{ task.description|truncatechars:120 }}</p>
-                <form method="post" action="{% url 'update_status' task.id %}">
+                <form method="post" action="{% url 'update_status' task.id %}" class="update-status-form">
                     {% csrf_token %}
                     <select name="new_status">
                         <option value="TODO" selected>Todo</option>
@@ -232,10 +268,15 @@
         <div class="kanban-column" data-status="IN_PROGRESS">
             <h2>🟧 Progress ({{ progress_tasks|length }})</h2>
             {% for task in progress_tasks %}
-            <div class="task-card progress" data-id="{{ task.id }}">
+            <div class="task-card progress"
+                data-id="{{ task.id }}"
+                data-title="{{ task.title }}"
+                data-short-description="{{ task.description|truncatechars:120 }}"
+                data-full-description="{{ task.full_description|default:'' }}"
+                data-status="IN_PROGRESS">
                 <strong>{{ task.title }}</strong>
                 <p>{{ task.description|truncatechars:120 }}</p>
-                <form method="post" action="{% url 'update_status' task.id %}">
+                <form method="post" action="{% url 'update_status' task.id %}" class="update-status-form">
                     {% csrf_token %}
                     <select name="new_status">
                         <option value="TODO">Todo</option>
@@ -252,10 +293,15 @@
         <div class="kanban-column" data-status="DONE">
             <h2>🟩 Done ({{ done_tasks|length }})</h2>
             {% for task in done_tasks %}
-            <div class="task-card done" data-id="{{ task.id }}">
+            <div class="task-card done"
+                data-id="{{ task.id }}"
+                data-title="{{ task.title }}"
+                data-short-description="{{ task.description|truncatechars:120 }}"
+                data-full-description="{{ task.full_description|default:'' }}"
+                data-status="DONE">
                 <strong>{{ task.title }}</strong>
                 <p>{{ task.description|truncatechars:120 }}</p>
-                <form method="post" action="{% url 'update_status' task.id %}">
+                <form method="post" action="{% url 'update_status' task.id %}" class="update-status-form">
                     {% csrf_token %}
                     <select name="new_status">
                         <option value="TODO">Todo</option>
@@ -271,8 +317,9 @@
     </div>
 </div>
 
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+
 <script>
-// --- ЖАҢЫ ФУНКЦИЯ: САНДАРДЫ ЭСЕПТӨӨ ФУНКЦИЯСЫ ---
 function updateTaskCount(columnElement, change) {
     const header = columnElement.querySelector('h2');
     if (!header) return;
@@ -288,7 +335,6 @@ function updateTaskCount(columnElement, change) {
         header.textContent = newText;
     }
 }
-// --- ЖАҢЫ ФУНКЦИЯ АЯКТАДЫ ---
 
 document.addEventListener("DOMContentLoaded", () => {
 
@@ -332,9 +378,7 @@ document.addEventListener("DOMContentLoaded", () => {
                     if(data.success) {
                         const currentColumn = card.closest(".kanban-column");
                         card.remove();
-                        // --- ЖАҢЫ ЛОГИКА: ӨЧҮРҮҮДӨ САНДЫ КЕМИТҮҮ ---
                         updateTaskCount(currentColumn, -1);
-                        // --- ЖАҢЫ ЛОГИКА АЯКТАДЫ ---
                     }
                     else alert("Өчүрүлбөдү!");
                 }
@@ -343,6 +387,37 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     document.querySelectorAll(".task-card").forEach(makeDraggable);
+
+    // --- ТАПШЫРМАНЫ БАСКАНДА МОДАЛДЫ ЧЫГАРУУ ---
+    const taskDetailsModalElement = document.getElementById('taskDetailsModal');
+    const taskDetailsModal = new bootstrap.Modal(taskDetailsModalElement);
+
+    document.querySelectorAll(".task-card").forEach(card => {
+        let isDragging = false;
+        card.addEventListener('mousedown', () => isDragging = false);
+        card.addEventListener('mousemove', () => isDragging = true);
+
+        card.addEventListener("click", (e) => {
+            if (isDragging || e.target.closest('form') || e.target.closest('.delete-btn')) {
+                return;
+            }
+
+            const id = card.dataset.id;
+            const title = card.dataset.title;
+            const shortDescription = card.dataset.shortDescription;
+            const fullDescription = card.dataset.fullDescription || 'Маалымат жок';
+            const status = card.dataset.status;
+
+            document.getElementById('modal-id').textContent = id;
+            document.getElementById('modal-title').textContent = title;
+            document.getElementById('modal-status').textContent = status;
+            document.getElementById('modal-short-description').textContent = shortDescription;
+            document.getElementById('modal-full-description').textContent = fullDescription;
+
+            taskDetailsModal.show();
+        });
+    });
+    // --- МОДАЛ ЛОГИКАСЫ АЯКТАДЫ ---
 
     columns.forEach(column => {
         column.addEventListener("dragover", e => { e.preventDefault(); column.classList.add("drag-over"); });
@@ -353,14 +428,10 @@ document.addEventListener("DOMContentLoaded", () => {
             const id = e.dataTransfer.getData("text/plain");
             const card = document.querySelector(`.task-card[data-id='${id}']`);
 
-            // --- ЖАҢЫ ЛОГИКА: ЭСКИ КОЛОНКАНЫ ТАБУУ ---
             const oldColumn = card.closest(".kanban-column");
-            // --- ЖАҢЫ ЛОГИКА АЯКТАДЫ ---
-
             const newStatus = column.dataset.status;
             const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
 
-            // Django аркылуу статус жаңыртуу (Drop логикасына кошулду)
             fetch(`/update/${id}/`, {
                 method: "POST",
                 body: `new_status=${newStatus}&csrfmiddlewaretoken=${csrfToken}`,
@@ -371,19 +442,19 @@ document.addEventListener("DOMContentLoaded", () => {
                 }
             }).then(response => {
                 if(response.ok) {
-
-                    // --- ЖАҢЫ ЛОГИКА: САНДАРДЫ ЖАҢЫРТУУ ---
                     if (oldColumn && oldColumn !== column) {
-                        updateTaskCount(oldColumn, -1); // Эски колонкадан 1ди кемитет
-                        updateTaskCount(column, 1);     // Жаңы колонкага 1ди кошот
+                        updateTaskCount(oldColumn, -1);
+                        updateTaskCount(column, 1);
                     }
-                    // --- ЖАҢЫ ЛОГИКА АЯКТАДЫ ---
-
                     column.appendChild(card);
+                    // СТИЛДЕРДИ ЖАҢЫРТУУ
                     card.classList.remove("todo", "progress", "done");
                     card.classList.add(newStatus.toLowerCase());
                     const select = card.querySelector('select[name="new_status"]');
                     if(select) select.value = newStatus;
+
+                    card.dataset.status = newStatus;
+
                 } else {
                     alert("Статус жаңыртылбай калды!");
                 }
@@ -391,26 +462,86 @@ document.addEventListener("DOMContentLoaded", () => {
         });
     });
 
+    // --- ЖАҢЫ КОШУЛДУ: "Последнее обновление" баскычы аркылуу статус өзгөртүү логикасы ---
+    document.querySelectorAll(".update-status-form").forEach(form => {
+        form.addEventListener('submit', async function(e) {
+            e.preventDefault();
+            const card = this.closest('.task-card');
+            const oldColumn = card.closest('.kanban-column');
+            const formData = new FormData(this);
+            const newStatus = formData.get('new_status');
+            const csrfToken = formData.get('csrfmiddlewaretoken');
+
+            const response = await fetch(this.action, {
+                method: "POST",
+                body: `new_status=${newStatus}&csrfmiddlewaretoken=${csrfToken}`,
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'X-CSRFToken': csrfToken
+                }
+            });
+
+            if (response.ok) {
+                const targetColumn = document.querySelector(`.kanban-column[data-status="${newStatus}"]`);
+
+                if (oldColumn !== targetColumn) {
+                    // Сандарды жаңыртуу
+                    updateTaskCount(oldColumn, -1);
+                    updateTaskCount(targetColumn, 1);
+
+                    // Картаны жаңы колонкага жылдыруу
+                    targetColumn.appendChild(card);
+                }
+
+                // СТИЛДЕРДИ ЖАНА АТРИБУТТАРДЫ ЖАҢЫРТУУ
+                card.classList.remove("todo", "progress", "done");
+                card.classList.add(newStatus.toLowerCase());
+                card.dataset.status = newStatus;
+
+                // Селекттин маанисин жаңыртуу (Керек эмес, анткени форманын ичиндеги селект ошол мааниде)
+                // const select = card.querySelector('select[name="new_status"]');
+                // if(select) select.value = newStatus;
+
+
+            } else {
+                alert("Статус жаңыртылбай калды!");
+            }
+        });
+    });
+    // --- ЖАҢЫ КОШУЛДУ АЯКТАДЫ ---
+
+
     // AJAX кошуу
     const form = document.getElementById("add-task-form");
     form.addEventListener("submit", async e => {
         e.preventDefault();
         const formData = new FormData(form);
         const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+
+        const fullDescription = formData.get('full_description') || '';
+
         const response = await fetch(form.action, {
             method: "POST",
             body: formData,
             headers: { 'X-Requested-With': 'XMLHttpRequest' }
         });
         const data = await response.json();
+
         if(data.success){
             const column = document.querySelector(`.kanban-column[data-status="${data.status}"]`);
             const div = document.createElement("div");
             div.className = `task-card ${data.status.toLowerCase()}`;
+
             div.dataset.id = data.id;
+            div.dataset.title = data.title;
+            div.dataset.shortDescription = data.description;
+            div.dataset.fullDescription = fullDescription;
+            div.dataset.status = data.status;
+
             div.innerHTML = `<strong>${data.title}</strong>
                              <p>${data.description}</p>
-                             <form method="post" action="/update/${data.id}/">
+                             <form method="post" action="/update/${data.id}/" class="update-status-form">
                                 <select name="new_status">
                                     <option value="TODO" ${data.status=="TODO"?"selected":""}>Todo</option>
                                     <option value="IN_PROGRESS" ${data.status=="IN_PROGRESS"?"selected":""}>Progress</option>
@@ -423,9 +554,7 @@ document.addEventListener("DOMContentLoaded", () => {
             makeDraggable(div);
             form.reset();
 
-            // --- ЖАҢЫ ЛОГИКА: КОШУУДАН КИЙИН САНДЫ ЖАҢЫРТУУ ---
-            updateTaskCount(column, 1); // Жаңы колонкага 1ди кошот
-            // --- ЖАҢЫ ЛОГИКА АЯКТАДЫ ---
+            updateTaskCount(column, 1);
 
             formContainer.classList.add("hide");
             toggleButton.textContent = "➕ Тапшырма Кошуу";
