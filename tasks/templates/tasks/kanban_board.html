@@ -1,0 +1,438 @@
+<!DOCTYPE html>
+<html lang="ky">
+<head>
+    <meta charset="UTF-8">
+    <title>Django Kanban Тактасы</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css">
+    <style>
+        body { background-color: #f4f5f7; font-family: "Segoe UI", Roboto, sans-serif; }
+        .navbar { background: #0747A6; padding: 10px 20px; display: flex; justify-content: space-between; align-items: center;}
+        .navbar-brand { color: #fff !important; font-weight: bold; font-size: 22px; }
+
+        .add-task-btn {
+            background: #0052CC;
+            color: white;
+            border: none;
+            padding: 8px 15px;
+            border-radius: 4px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+        .add-task-btn:hover { background: #0065FF; }
+
+        .form-box { background: #fff; padding: 25px; border-radius: 8px; box-shadow: 0 2px 6px rgba(9,30,66,0.2); margin-bottom: 25px; }
+        .kanban-columns { display: flex; gap: 20px; align-items: flex-start; width: 100%; }
+        .kanban-column { background: #ebecf0; padding: 15px; border-radius: 6px; width: 33%; min-height: 400px; box-shadow: 0 1px 3px rgba(9,30,66,0.2); }
+        .kanban-column h2 { font-size: 20px; color: #172b4d; margin-bottom: 15px; }
+        .task-card {
+            background: #fff;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 12px;
+            border-left: 6px solid #4c9aff;
+            box-shadow: 0 1px 3px rgba(9,30,66,0.2);
+            transition: 0.2s;
+            cursor: grab;
+            min-width: 0;
+            word-wrap: break-word;
+        }
+        .task-card:hover { transform: translateY(-3px); box-shadow: 0 4px 12px rgba(9,30,66,0.25); }
+        .todo { border-left-color: #4c9aff; }
+        .progress { border-left-color: #ff991f; }
+        .done { border-left-color: #36b37e; }
+        .task-card p { margin: 0; font-size: 15px; line-height: 1.4; }
+        .task-card strong { font-size: 17px; display: block; margin-bottom: 6px; }
+
+        /* --- ОҢДООЛОР: САНДАРДЫН КЫСЫЛУУСУН ЖАНА БАСКЫЧТАРДЫ ЖАКШЫРТУУ --- */
+        .task-card form {
+            margin-top: 10px;
+            padding-top: 10px;
+            border-top: 1px dashed #dcdcdc;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+        .task-card select {
+            padding: 5px;
+            border-radius: 4px;
+            border: 1px solid #b8b8b8;
+            flex-grow: 1;
+            min-width: 50px;
+        }
+        .task-card button {
+            background: #0747A6;
+            color: white;
+            border: none;
+            padding: 6px 8px; /* Кичинекей padding */
+            border-radius: 4px;
+            margin-left: 0;
+            white-space: nowrap;
+            font-size: 12px; /* Кичинекей шрифт */
+            line-height: 1;
+        }
+        .task-card .delete-btn {
+            background: #ff5248;
+            margin-top: 5px;
+            display: block;
+            width: 100%;
+        }
+        /* --- ОҢДООЛОР АЯКТАДЫ --- */
+
+        .drag-over { background-color: #dfe6f0; }
+        .hide { display: none; }
+    </style>
+    <style>
+    /* --- НЕГИЗГИ ӨЗГӨРТҮҮ: ФОНДУ КАРА КӨККӨ АЛМАШТЫРУУ --- */
+    body {
+        background-color: #172B4D; /* Караңгы көк фон */
+        font-family: "Segoe UI", Roboto, sans-serif;
+        color: #f4f5f7; /* Жалпы тексттин түсү акка өзгөртүлдү */
+    }
+
+    .navbar { background: #0747A6; padding: 10px 20px; display: flex; justify-content: space-between; align-items: center;}
+    .navbar-brand { color: #fff !important; font-weight: bold; font-size: 22px; }
+
+    .add-task-btn {
+        background: #0052CC;
+        color: white;
+        border: none;
+        padding: 8px 15px;
+        border-radius: 4px;
+        font-weight: 500;
+        cursor: pointer;
+        transition: background-color 0.2s;
+    }
+    .add-task-btn:hover { background: #0065FF; }
+
+    /* --- ФОРМА ЖАНА КОЛОНКА КОНТЕЙНЕРЛЕРИНДЕГИ ӨЗГӨРТҮҮЛӨР --- */
+    .form-box {
+        background: #283e60; /* Форманын фону бир аз ачыгыраак кара көк */
+        padding: 25px;
+        border-radius: 8px;
+        box-shadow: 0 2px 6px rgba(0,0,0,0.5); /* Көмүскөнү күчөттүк */
+        margin-bottom: 25px;
+    }
+    .kanban-columns { display: flex; gap: 20px; align-items: flex-start; width: 100%; }
+    .kanban-column {
+        background: #21304A; /* Колонканын фону кара көк */
+        padding: 15px;
+        border-radius: 6px;
+        width: 33%;
+        min-height: 400px;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.4);
+    }
+    .kanban-column h2 {
+        font-size: 20px;
+        color: #f4f5f7; /* Колонканын аталышын ак кылдык */
+        margin-bottom: 15px;
+    }
+
+    /* --- ТАПШЫРМА КАРТОЧКАЛАРЫНЫН ӨЗГӨРТҮҮЛӨРҮ --- */
+    .task-card {
+        background: #384C6C; /* Карточканын фону андан да ачыгыраак */
+        color: #f4f5f7; /* Карточкадагы текст ак */
+        padding: 15px;
+        border-radius: 8px;
+        margin-bottom: 12px;
+        border-left: 6px solid #4c9aff;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.3);
+        transition: 0.2s;
+        cursor: grab;
+        min-width: 0;
+        word-wrap: break-word;
+    }
+    .task-card:hover { transform: translateY(-3px); box-shadow: 0 4px 12px rgba(0,0,0,0.6); }
+    .todo { border-left-color: #4c9aff; }
+    .progress { border-left-color: #ff991f; }
+    .done { border-left-color: #36b37e; }
+    .task-card p { margin: 0; font-size: 15px; line-height: 1.4; }
+    .task-card strong { font-size: 17px; display: block; margin-bottom: 6px; }
+
+    .task-card form {
+        margin-top: 10px;
+        padding-top: 10px;
+        border-top: 1px dashed #dcdcdc;
+        display: flex;
+        align-items: center;
+        gap: 5px;
+    }
+
+    /* Селект жана Инпуттарды караңгы фонго ылайыкташтыруу */
+    .task-card select, .form-box input, .form-box textarea, .form-box select {
+        padding: 5px;
+        border-radius: 4px;
+        border: 1px solid #5e7090;
+        background-color: #21304A; /* Фон караңгы */
+        color: #f4f5f7; /* Текст ак */
+        flex-grow: 1;
+        min-width: 50px;
+    }
+
+    .task-card button {
+        background: #0747A6;
+        color: white;
+        padding: 6px 8px;
+        border-radius: 4px;
+        margin-left: 0;
+        white-space: nowrap;
+        font-size: 12px;
+        line-height: 1;
+    }
+    .task-card .delete-btn {
+        background: #ff5248;
+        margin-top: 5px;
+        display: block;
+        width: 100%;
+    }
+
+    .drag-over { background-color: #283e60; } /* Drag-over фонун да караңгылатуу */
+    .hide { display: none; }
+</style>
+</head>
+<body>
+<nav class="navbar px-4">
+    <a class="navbar-brand" href="#">Джира-Стиль Канбан</a>
+    <button id="toggle-form-btn" class="add-task-btn">
+        ➕ Тапшырма Кошуу
+    </button>
+</nav>
+
+<div class="container mt-4">
+    <div id="new-task-form-container" class="form-box hide">
+        <h3 class="mb-3">➕ Жаңы Тапшырма Кошуу</h3>
+        <form id="add-task-form" method="post" action="{% url 'kanban_board' %}">
+            {% csrf_token %}
+            {{ form.as_p }}
+            <button class="btn btn-primary">Тапшырма кошуу</button>
+        </form>
+    </div>
+
+    <div class="kanban-columns">
+        <div class="kanban-column" data-status="TODO">
+            <h2>🟦 Todo ({{ todo_tasks|length }})</h2>
+            {% for task in todo_tasks %}
+            <div class="task-card todo" data-id="{{ task.id }}">
+                <strong>{{ task.title }}</strong>
+                <p>{{ task.description|truncatechars:120 }}</p>
+                <form method="post" action="{% url 'update_status' task.id %}">
+                    {% csrf_token %}
+                    <select name="new_status">
+                        <option value="TODO" selected>Todo</option>
+                        <option value="IN_PROGRESS">Progress</option>
+                        <option value="DONE">Done</option>
+                    </select>
+                    <button>Последнее обновление</button>
+                </form>
+                <button class="btn btn-danger btn-sm delete-btn" style="margin-top:5px;">Отключить</button>
+            </div>
+            {% empty %}<p></p>{% endfor %}
+        </div>
+
+        <div class="kanban-column" data-status="IN_PROGRESS">
+            <h2>🟧 Progress ({{ progress_tasks|length }})</h2>
+            {% for task in progress_tasks %}
+            <div class="task-card progress" data-id="{{ task.id }}">
+                <strong>{{ task.title }}</strong>
+                <p>{{ task.description|truncatechars:120 }}</p>
+                <form method="post" action="{% url 'update_status' task.id %}">
+                    {% csrf_token %}
+                    <select name="new_status">
+                        <option value="TODO">Todo</option>
+                        <option value="IN_PROGRESS" selected>Progress</option>
+                        <option value="DONE">Done</option>
+                    </select>
+                    <button>Последнее обновление</button>
+                </form>
+                <button class="btn btn-danger btn-sm delete-btn" style="margin-top:5px;">Отключить</button>
+            </div>
+            {% empty %}<p></p>{% endfor %}
+        </div>
+
+        <div class="kanban-column" data-status="DONE">
+            <h2>🟩 Done ({{ done_tasks|length }})</h2>
+            {% for task in done_tasks %}
+            <div class="task-card done" data-id="{{ task.id }}">
+                <strong>{{ task.title }}</strong>
+                <p>{{ task.description|truncatechars:120 }}</p>
+                <form method="post" action="{% url 'update_status' task.id %}">
+                    {% csrf_token %}
+                    <select name="new_status">
+                        <option value="TODO">Todo</option>
+                        <option value="IN_PROGRESS">Progress</option>
+                        <option value="DONE" selected>Done</option>
+                    </select>
+                    <button>Последнее обновление</button>
+                </form>
+                <button class="btn btn-danger btn-sm delete-btn" style="margin-top:5px;">Отключить</button>
+            </div>
+            {% empty %}<p></p>{% endfor %}
+        </div>
+    </div>
+</div>
+
+<script>
+// --- ЖАҢЫ ФУНКЦИЯ: САНДАРДЫ ЭСЕПТӨӨ ФУНКЦИЯСЫ ---
+function updateTaskCount(columnElement, change) {
+    const header = columnElement.querySelector('h2');
+    if (!header) return;
+
+    const text = header.textContent;
+    const match = text.match(/\((.*?)\)/);
+
+    if (match) {
+        let currentCount = parseInt(match[1]);
+        let newCount = currentCount + change;
+
+        const newText = text.replace(`(${currentCount})`, `(${newCount})`);
+        header.textContent = newText;
+    }
+}
+// --- ЖАҢЫ ФУНКЦИЯ АЯКТАДЫ ---
+
+document.addEventListener("DOMContentLoaded", () => {
+
+    const columns = document.querySelectorAll(".kanban-column");
+    const toggleButton = document.getElementById("toggle-form-btn");
+    const formContainer = document.getElementById("new-task-form-container");
+
+    toggleButton.addEventListener("click", () => {
+        formContainer.classList.toggle("hide");
+
+        if (formContainer.classList.contains("hide")) {
+            toggleButton.textContent = "➕ Тапшырма Кошуу";
+        } else {
+            toggleButton.textContent = "❌ Форманы Жабуу";
+        }
+    });
+
+
+    function makeDraggable(card){
+        card.setAttribute("draggable", "true");
+        card.addEventListener("dragstart", e => {
+            e.dataTransfer.setData("text/plain", card.dataset.id);
+            setTimeout(() => card.classList.add("hide"), 0);
+        });
+        card.addEventListener("dragend", () => card.classList.remove("hide"));
+
+        // Delete кнопка (Отключить баскычы)
+        const deleteBtn = card.querySelector(".delete-btn");
+        if(deleteBtn){
+            deleteBtn.addEventListener("click", async () => {
+                if(confirm("Чынында өчүрөсүзбү?")){
+                    const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+                    const response = await fetch(`/delete/${card.dataset.id}/`, {
+                        method: "POST",
+                        headers: {
+                            "X-CSRFToken": csrfToken,
+                            "X-Requested-With": "XMLHttpRequest"
+                        }
+                    });
+                    const data = await response.json();
+                    if(data.success) {
+                        const currentColumn = card.closest(".kanban-column");
+                        card.remove();
+                        // --- ЖАҢЫ ЛОГИКА: ӨЧҮРҮҮДӨ САНДЫ КЕМИТҮҮ ---
+                        updateTaskCount(currentColumn, -1);
+                        // --- ЖАҢЫ ЛОГИКА АЯКТАДЫ ---
+                    }
+                    else alert("Өчүрүлбөдү!");
+                }
+            });
+        }
+    }
+
+    document.querySelectorAll(".task-card").forEach(makeDraggable);
+
+    columns.forEach(column => {
+        column.addEventListener("dragover", e => { e.preventDefault(); column.classList.add("drag-over"); });
+        column.addEventListener("dragleave", e => column.classList.remove("drag-over"));
+        column.addEventListener("drop", e => {
+            e.preventDefault();
+            column.classList.remove("drag-over");
+            const id = e.dataTransfer.getData("text/plain");
+            const card = document.querySelector(`.task-card[data-id='${id}']`);
+
+            // --- ЖАҢЫ ЛОГИКА: ЭСКИ КОЛОНКАНЫ ТАБУУ ---
+            const oldColumn = card.closest(".kanban-column");
+            // --- ЖАҢЫ ЛОГИКА АЯКТАДЫ ---
+
+            const newStatus = column.dataset.status;
+            const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+
+            // Django аркылуу статус жаңыртуу (Drop логикасына кошулду)
+            fetch(`/update/${id}/`, {
+                method: "POST",
+                body: `new_status=${newStatus}&csrfmiddlewaretoken=${csrfToken}`,
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'X-CSRFToken': csrfToken
+                }
+            }).then(response => {
+                if(response.ok) {
+
+                    // --- ЖАҢЫ ЛОГИКА: САНДАРДЫ ЖАҢЫРТУУ ---
+                    if (oldColumn && oldColumn !== column) {
+                        updateTaskCount(oldColumn, -1); // Эски колонкадан 1ди кемитет
+                        updateTaskCount(column, 1);     // Жаңы колонкага 1ди кошот
+                    }
+                    // --- ЖАҢЫ ЛОГИКА АЯКТАДЫ ---
+
+                    column.appendChild(card);
+                    card.classList.remove("todo", "progress", "done");
+                    card.classList.add(newStatus.toLowerCase());
+                    const select = card.querySelector('select[name="new_status"]');
+                    if(select) select.value = newStatus;
+                } else {
+                    alert("Статус жаңыртылбай калды!");
+                }
+            });
+        });
+    });
+
+    // AJAX кошуу
+    const form = document.getElementById("add-task-form");
+    form.addEventListener("submit", async e => {
+        e.preventDefault();
+        const formData = new FormData(form);
+        const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+        const response = await fetch(form.action, {
+            method: "POST",
+            body: formData,
+            headers: { 'X-Requested-With': 'XMLHttpRequest' }
+        });
+        const data = await response.json();
+        if(data.success){
+            const column = document.querySelector(`.kanban-column[data-status="${data.status}"]`);
+            const div = document.createElement("div");
+            div.className = `task-card ${data.status.toLowerCase()}`;
+            div.dataset.id = data.id;
+            div.innerHTML = `<strong>${data.title}</strong>
+                             <p>${data.description}</p>
+                             <form method="post" action="/update/${data.id}/">
+                                <select name="new_status">
+                                    <option value="TODO" ${data.status=="TODO"?"selected":""}>Todo</option>
+                                    <option value="IN_PROGRESS" ${data.status=="IN_PROGRESS"?"selected":""}>Progress</option>
+                                    <option value="DONE" ${data.status=="DONE"?"selected":""}>Done</option>
+                                </select>
+                                <button>Последнее обновление</button>
+                             </form>
+                             <button class="btn btn-danger btn-sm delete-btn" style="margin-top:5px;">Отключить</button>`;
+            column.appendChild(div);
+            makeDraggable(div);
+            form.reset();
+
+            // --- ЖАҢЫ ЛОГИКА: КОШУУДАН КИЙИН САНДЫ ЖАҢЫРТУУ ---
+            updateTaskCount(column, 1); // Жаңы колонкага 1ди кошот
+            // --- ЖАҢЫ ЛОГИКА АЯКТАДЫ ---
+
+            formContainer.classList.add("hide");
+            toggleButton.textContent = "➕ Тапшырма Кошуу";
+
+        } else alert("Тапшырма кошулбай калды!");
+    });
+});
+</script>
+</body>
+</html>
