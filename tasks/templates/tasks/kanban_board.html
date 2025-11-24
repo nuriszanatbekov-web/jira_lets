@@ -190,6 +190,19 @@
     .drag-over { background-color: #283e60; } /* Drag-over фонун да караңгылатуу */
     .hide { display: none; }
 
+    /* --- ЖАҢЫ КОШУЛДУ: АВТОРДУН СТИЛИ --- */
+    .task-card .task-author {
+        font-size: 13px;
+        color: #A6C5E2; /* Ачык көк түс */
+        margin-bottom: 8px; /* Картанын аталышынан аралык */
+        padding-bottom: 5px;
+        border-bottom: 1px dotted #5e7090; /* Жеңил сызык менен бөлүү */
+        font-weight: 500;
+    }
+    .task-card .task-author strong {
+        font-size: 13px; /* Strong үчүн шрифтти кичирейтүү */
+        display: inline; /* Аталыш менен бир сапта туруусу үчүн */
+    }
     /* --- ОҢДООЛОР: МОДАЛДАГЫ ТЕКСТТИ ОҢДОО --- */
     .modal-body p {
         word-break: break-word; /* Узун сөздөрдү сындыруу */
@@ -249,6 +262,17 @@
                 data-short-description="{{ task.description|truncatechars:120 }}"
                 data-full-description="{{ task.full_description|default:'' }}"
                 data-status="TODO">
+
+                <p class="task-author">
+                    Автору:
+                    <strong>
+                    {% if task.author %}
+                        {{ task.author.username }}
+                    {% else %}
+                        (Белгисиз)
+                    {% endif %}
+                    </strong>
+                </p>
                 <strong>{{ task.title }}</strong>
                 <p>{{ task.description|truncatechars:120 }}</p>
                 <form method="post" action="{% url 'update_status' task.id %}" class="update-status-form">
@@ -274,6 +298,17 @@
                 data-short-description="{{ task.description|truncatechars:120 }}"
                 data-full-description="{{ task.full_description|default:'' }}"
                 data-status="IN_PROGRESS">
+
+                <p class="task-author">
+                    Автору:
+                    <strong>
+                    {% if task.author %}
+                        {{ task.author.username }}
+                    {% else %}
+                        (Белгисиз)
+                    {% endif %}
+                    </strong>
+                </p>
                 <strong>{{ task.title }}</strong>
                 <p>{{ task.description|truncatechars:120 }}</p>
                 <form method="post" action="{% url 'update_status' task.id %}" class="update-status-form">
@@ -299,6 +334,17 @@
                 data-short-description="{{ task.description|truncatechars:120 }}"
                 data-full-description="{{ task.full_description|default:'' }}"
                 data-status="DONE">
+
+                <p class="task-author">
+                    Автору:
+                    <strong>
+                    {% if task.author %}
+                        {{ task.author.username }}
+                    {% else %}
+                        (Белгисиз)
+                    {% endif %}
+                    </strong>
+                </p>
                 <strong>{{ task.title }}</strong>
                 <p>{{ task.description|truncatechars:120 }}</p>
                 <form method="post" action="{% url 'update_status' task.id %}" class="update-status-form">
@@ -499,11 +545,6 @@ document.addEventListener("DOMContentLoaded", () => {
                 card.classList.add(newStatus.toLowerCase());
                 card.dataset.status = newStatus;
 
-                // Селекттин маанисин жаңыртуу (Керек эмес, анткени форманын ичиндеги селект ошол мааниде)
-                // const select = card.querySelector('select[name="new_status"]');
-                // if(select) select.value = newStatus;
-
-
             } else {
                 alert("Статус жаңыртылбай калды!");
             }
@@ -539,7 +580,14 @@ document.addEventListener("DOMContentLoaded", () => {
             div.dataset.fullDescription = fullDescription;
             div.dataset.status = data.status;
 
-            div.innerHTML = `<strong>${data.title}</strong>
+            // Жаңы кошулган картага автор маалыматын кошуу (эгер сервер тараптан берилсе)
+            const authorHtml = data.author_username ?
+                                `<p class="task-author">Автору: <strong>${data.author_username}</strong></p>` :
+                                `<p class="task-author">Автору: <strong>(Белгисиз)</strong></p>`;
+
+
+            div.innerHTML = `${authorHtml}
+                             <strong>${data.title}</strong>
                              <p>${data.description}</p>
                              <form method="post" action="/update/${data.id}/" class="update-status-form">
                                 <select name="new_status">
