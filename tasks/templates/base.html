@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="ky">
+<head>
+    <meta charset="UTF-8">
+    <title>{% block title %}Jira-Стиль Kanban{% endblock %}</title>
+
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+
+    <style>
+        /* 1. Жалпы стилдер */
+        body {
+            background-color: #172B4D;
+            font-family: "Segoe UI", Roboto, sans-serif;
+            color: #f4f5f7;
+        }
+        /* Негизги контейнерди Flexbox кылабыз */
+        .full-page-wrapper {
+            display: flex;
+            min-height: 100vh;
+        }
+
+        /* 2. 🌟 СОЛ НАВИГАЦИЯ (SIDEBAR) СТИЛИ */
+        .sidebar {
+            width: 250px;
+            background-color: #0747A6; /* Navbar түсү */
+            padding-top: 20px;
+            color: white;
+            flex-shrink: 0;
+            box-shadow: 2px 0 5px rgba(0,0,0,0.5);
+        }
+        .sidebar-header {
+            padding: 0 15px 20px;
+            font-size: 1.5em;
+            font-weight: bold;
+            border-bottom: 1px solid #1a5e78;
+            margin-bottom: 15px;
+        }
+        .nav-link-sidebar {
+            display: block;
+            padding: 10px 15px;
+            text-decoration: none;
+            color: white;
+            font-size: 1.0em;
+            transition: background-color 0.2s;
+        }
+        .nav-link-sidebar:hover {
+            background-color: #0065FF;
+        }
+        /* ⭐ АКТИВДҮҮ КЛАСС ЛОГИКАСЫН КОШТУК */
+        .nav-link-sidebar.active {
+            background-color: #0052CC;
+            border-left: 3px solid #f4f5f7; /* Активдүүлүктү белгилөө */
+            padding-left: 12px;
+        }
+
+        /* 3. 🌟 НЕГИЗГИ КОНТЕНТ АЙМАГЫ (Оң жагы) */
+        .main-content-wrapper {
+            flex-grow: 1;
+            padding: 0;
+        }
+
+        /* 4. Navbar стилдери */
+        .navbar {
+            background: #0747A6;
+            padding: 10px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid #1a5e78;
+        }
+        .navbar-brand { color: #fff !important; font-weight: bold; font-size: 22px; }
+        .add-task-btn { background: #0052CC; color: white; border: none; padding: 8px 15px; border-radius: 4px; font-weight: 500; cursor: pointer; transition: background-color 0.2s; }
+        .add-task-btn:hover { background: #0065FF; }
+
+    </style>
+
+    {% block head %}
+    {% endblock %}
+
+</head>
+<body>
+    <div class="full-page-wrapper">
+
+        <div class="sidebar">
+            <div class="sidebar-header">Джира Клону</div>
+            <nav>
+                <a href="{% url 'user_profile' %}" class="nav-link-sidebar {% if 'profile' in request.path %}active{% endif %}">
+                    <i class="fas fa-user-circle me-2"></i> Профиль
+                </a>
+
+                <a href="{% url 'teams_list' %}" class="nav-link-sidebar {% if 'teams' in request.path %}active{% endif %}">
+                    <i class="fas fa-users me-2"></i> Командалар
+                </a>
+
+                <a href="{% url 'kanban_board' %}" class="nav-link-sidebar {% if request.path == '/' or 'kanban' in request.path %}active{% endif %}">
+                    <i class="fas fa-columns me-2"></i> Канбан Такта
+                </a>
+            </nav>
+        </div>
+
+        <div class="main-content-wrapper">
+
+            <nav class="navbar px-4">
+
+                <a class="navbar-brand" href="{% url 'kanban_board' %}">
+                    {% if 'teams' in request.path %}
+                        Командалар
+                    {% elif 'profile' in request.path %}
+                        Профиль
+                    {% else %}
+                        Канбан Доска
+                    {% endif %}
+                </a>
+
+                {% url 'kanban_board' as kanban_url %}
+                {% if request.path == kanban_url or request.path == '/' %}
+                    <button id="toggle-form-btn" class="add-task-btn">
+                        ➕ Тапшырма Кошуу
+                    </button>
+                {% endif %}
+
+            </nav>
+
+            <div class="container mt-4">
+                {% block content %}
+                {% endblock %}
+            </div>
+
+        </div>
+    </div>
+
+    {% block scripts %}
+        <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    {% endblock %}
+</body>
+</html>

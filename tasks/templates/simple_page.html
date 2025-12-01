@@ -1,0 +1,12 @@
+{% extends "base.html" %}
+
+{% block title %}{{ page_title }}{% endblock %}
+
+{% block content %}
+    <div style="padding: 20px; background-color: #283e60; border-radius: 8px;">
+        <h1>{{ page_title }}</h1>
+        <p>{{ content }}</p>
+        <p>Бул барактын толук функциясы кийинчерээк кошулат.</p>
+        <a href="{% url 'kanban_board' %}" class="btn btn-primary" style="background-color: #0052cc; border: none;">Канбанга кайтуу</a>
+    </div>
+{% endblock %}

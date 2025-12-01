@@ -1,0 +1,40 @@
+{% extends "base.html" %}
+
+{% block title %}Кирүү{% endblock %}
+
+{% block content %}
+    <div class="row justify-content-center">
+        <div class="col-md-5">
+            <div class="card p-4 mt-5" style="background-color: #283e60; border: 1px solid #1a5e78;">
+                <h2 class="text-center mb-4">Кирүү</h2>
+
+                <form method="post">
+                    {% csrf_token %}
+
+                    {% if form.errors %}
+                        <div class="alert alert-danger">
+                            Колдонуучунун аты же сырсөз туура эмес. Кайра аракет кылыңыз.
+                        </div>
+                    {% endif %}
+
+                    <div class="mb-3">
+                        <label for="{{ form.username.id_for_label }}" class="form-label">Колдонуучунун аты:</label>
+                        <input type="text" name="{{ form.username.name }}" id="{{ form.username.id_for_label }}" class="form-control" style="background-color: #172B4D; color: white;">
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="{{ form.password.id_for_label }}" class="form-label">Сырсөз:</label>
+                        <input type="password" name="{{ form.password.name }}" id="{{ form.password.id_for_label }}" class="form-control" style="background-color: #172B4D; color: white;">
+                    </div>
+
+                    <input type="hidden" name="next" value="{{ next }}">
+
+                    <button type="submit" class="btn btn-primary w-100" style="background-color: #0052CC; border: none;">Кирүү</button>
+                </form>
+                <p class="text-center mt-3">
+                    <small>Аккаунтуңуз жокпу? <a href="#" style="color: #0065FF; text-decoration: none;">Каттоо</a></small>
+                </p>
+            </div>
+        </div>
+    </div>
+{% endblock %}

@@ -1,0 +1,62 @@
+{% extends "base.html" %}
+
+{% block title %}Командалар{% endblock %}
+
+{% block content %}
+    <div class="header-container d-flex justify-content-between align-items-center">
+        <h1>Командалар</h1>
+        <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#createTeamModal">➕ Жаңы Команда Түзүү</button>
+    </div>
+    <hr style="border-top: 1px solid #384C6C;">
+
+    <div class="row">
+        {% for team in teams %}
+            <div class="col-md-4 mb-4">
+                <div class="card" style="background-color: #283e60; color: #f4f5f7;">
+                    <div class="card-body">
+                        <h5 class="card-title">{{ team.name }}</h5>
+                        <p class="card-text">{{ team.description|default:"Сүрөттөмө жок."|truncatechars:100 }}</p>
+                        <p class="card-text">
+                            <strong>Мүчөлөр:</strong>
+                            {% for member in team.members.all %}
+                                <span class="badge bg-secondary">{{ member.username }}</span>
+                            {% empty %}
+                                (Мүчө жок)
+                            {% endfor %}
+                        </p>
+                        <a href="#" class="btn btn-sm" style="background-color: #0747A6; color: white;">Толугураак</a>
+                    </div>
+                </div>
+            </div>
+        {% empty %}
+            <div class="alert alert-info" role="alert" style="background-color: #384C6C; border-color: #0747A6; color: #f4f5f7;">
+                Азырынча командалар жок.
+            </div>
+        {% endfor %}
+    </div>
+
+    <div class="modal fade" id="createTeamModal" tabindex="-1" aria-labelledby="createTeamModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content" style="background-color: #172B4D; color: #f4f5f7;">
+                <div class="modal-header" style="border-bottom: 1px solid #384C6C;">
+                    <h5 class="modal-title" id="createTeamModalLabel">Жаңы Команда Түзүү</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close" style="filter: invert(1);"></button>
+                </div>
+                <div class="modal-body">
+                    <form action="{% url 'teams_list' %}" method="post">
+                        {% csrf_token %}
+                        <div class="mb-3">
+                            <label for="id_name" class="form-label">Аты:</label>
+                            <input type="text" name="name" id="id_name" class="form-control" style="background-color: #283e60; border: none; color: white;">
+                        </div>
+                        <div class="mb-3">
+                            <label for="id_description" class="form-label">Сүрөттөмө:</label>
+                            <textarea name="description" id="id_description" class="form-control" rows="3" style="background-color: #283e60; border: none; color: white;"></textarea>
+                        </div>
+                        <button type="submit" class="btn btn-primary" style="background-color: #0052CC;">Түзүү</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}

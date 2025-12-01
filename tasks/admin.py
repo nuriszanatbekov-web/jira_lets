@@ -1,37 +1,36 @@
 # tasks/admin.py
+
 from django.contrib import admin
-from .models import Task  # Task моделин импорттоо
+from .models import Task
 
 
+# Task моделин Admin панелинде кантип көрсөтүү керек
 class TaskAdmin(admin.ModelAdmin):
-    # Админканын тизмесинде көрүнө турган талаалар
-    list_display = (
-        'title',
-        'status',
-        'get_author_username',  # Жаңы кошулган метод
-        'created_at'
-    )
+    # Тизмеде көрсөтүлө турган талаалар
+    list_display = ('title', 'status', 'get_assigned_to', 'author', 'created_at')
 
-    # Тизменин үстүнөн чыпкалоо үчүн талаалар
-    list_filter = ('status', 'author')
+    # Тизмени чыпкалоо үчүн талаалар
+    list_filter = ('status', 'assigned_to', 'created_at')
 
-    # Издөө үчүн талаалар
-    search_fields = ('title', 'description', 'author__username')
+    # Тизмени издөө үчүн талаалар
+    search_fields = ('title', 'description')
 
-    # Жаңы тапшырма түзүү/өзгөртүү формасындагы талаалардын тартиби
+    # Редактирлөө барагындагы талаалардын тартиби
     fieldsets = (
-        (None, {
-            'fields': ('title', 'description', 'full_description', 'status', 'author')
-        }),
+        (None, {'fields': ('title', 'description', 'full_description', 'status')}),
+        ('Дайындоо', {'fields': ('author', 'assigned_to')}),
     )
 
-    # list_display үчүн автордун атын кайтаруучу функция
-    # Бул функция Task моделиндеги author талаасын колдонот.
-    def get_author_username(self, obj):
-        return obj.author.username if obj.author else "Белгисиз"
+    # ManyToMany талааларын (assigned_to) жакшыраак көрсөтүү
+    filter_horizontal = ('assigned_to',)
 
-    get_author_username.short_description = 'Автору'  # Колонканын аталышы
+    # 'assigned_to' талаасынын аттарын тизмеде көрсөтүүчү функция
+    def get_assigned_to(self, obj):
+        # Бардык дайындалгандарды запятая менен бөлүп кайтарат
+        return ", ".join([user.username for user in obj.assigned_to.all()])
+
+    get_assigned_to.short_description = 'Дайындалгандар'  # Колонканын атын кыргызча кылуу
 
 
-# Task моделин каттоо
+# Жаңы TaskAdmin классын каттайбыз
 admin.site.register(Task, TaskAdmin)

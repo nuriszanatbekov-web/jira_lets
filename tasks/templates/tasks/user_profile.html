@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+
+{% block title %}Профиль{% endblock %}
+
+{% block content %}
+    <div class="profile-container" style="background-color: #283e60; padding: 30px; border-radius: 8px;">
+        <h1 class="mb-4">{{ page_title }}</h1>
+        <hr style="border-top: 1px solid #384C6C;">
+
+        <div class="row">
+            <div class="col-md-6">
+                <p><strong>Колдонуучунун аты (Username):</strong> {{ user.username }}</p>
+                <p><strong>Электрондук почта (Email):</strong> {{ user.email|default:"Кошулган эмес" }}</p>
+                <p><strong>Толук аты:</strong> {{ user.first_name }} {{ user.last_name }}</p>
+                <p><strong>Аккаунт түзүлгөн:</strong> {{ user.date_joined|date:"M d, Y" }}</p>
+            </div>
+            <div class="col-md-6">
+                <div class="stats-card p-3 rounded" style="background-color: #172B4D; border: 1px solid #0747A6;">
+                    <h5>📊 Статистика</h5>
+                    <p>Түзүлгөн тапшырмалар: <strong>{{ task_count }}</strong></p>
+                    <p>Учурдагы командалары: <strong>{{ user.teams.count }}</strong></p>
+                    </div>
+            </div>
+        </div>
+
+        <button class="btn btn-sm mt-4" style="background-color: #ff991f; color: black;">Профильди өзгөртүү</button>
+
+    </div>
+{% endblock %}
